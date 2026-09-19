@@ -1,0 +1,33 @@
+# True Margin — Cursor Rules
+
+## Context
+Two-week overload-planning dashboard for Chatathon 2026 (WHOOP track).
+React + TypeScript + Tailwind CSS. No backend, no database, no live
+integrations required for the demo.
+
+## Rule Engine Is Not AI
+The logic in src/logic/ruleEngine.ts must stay deterministic and fully
+explainable in one sentence: if high-concentration task hours exceed
+concentration-friendly open time, flag the day. Never replace this with an
+ML model, embedding, or LLM call, and don't suggest doing so.
+
+## Data Is Synthetic
+Everything in src/logic/data.ts is synthetic demo data. Don't connect it to
+a real calendar API, database, or auth provider. Keep the "SYNTHETIC"
+comments intact when editing this file.
+
+## Scope Discipline
+Out of scope for this repo: user authentication, a database, a manager UI,
+live calendar integration, live LLM calls for the delegation message. If a
+request would require one of these, say so instead of building it.
+
+## Code Style
+- TypeScript strict mode, typed props and function signatures
+- Tailwind CSS only, no additional CSS frameworks
+- No animation libraries — the UI needs to read clearly on a projector
+- Comment any synthetic, simulated, or mocked behavior inline
+
+## Protect the Happy Path
+Every change should leave `npm install && npm run dev` working and the core
+flow intact: dashboard → flagged day → recommendation → accept. Flag any
+change that risks breaking it before applying.
