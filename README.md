@@ -68,6 +68,6 @@ Individual check-in data — energy, meals, breaks, workload, confidence — is 
 
 ## Team
 
-[Team name] — [Team members]
+True Margin — Khai Tran
 
 Built at Chatathon 2026, Northeastern University · AINU · WHOOP Track
