@@ -89,6 +89,6 @@ Individual check-in data — energy, meals, breaks, demand, confidence — is ne
 
 ## Team
 
-True Margin — Khai Tran
+True Margin — Khai Tran Shlok Pradip Ellis McConnel
 
 Built at Chatathon 2026, Northeastern University · AINU · WHOOP Track
