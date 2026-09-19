@@ -2,32 +2,45 @@
 
 ## Context
 Two-week overload-planning dashboard for Chatathon 2026 (WHOOP track).
-React + TypeScript + Tailwind CSS. No backend, no database, no live
-integrations required for the demo.
+The runnable demo is a single file: `index.html`. No backend, no
+database, no live calendar required.
+
+## The HTML Is The Product
+`index.html` is the final UI. Keep README.md and DEMO_SCRIPT.md matched
+to what this file actually does (Oracle Platform Engineering, Priya /
+Amara, seed 4821, Thu 8 Architecture deep dive → Fri 9 10:30).
+Do not resurrect a separate React app unless the user asks.
 
 ## Rule Engine Is Not AI
-The logic in src/logic/ruleEngine.ts must stay deterministic and fully
-explainable in one sentence: if high-concentration task hours exceed
-concentration-friendly open time, flag the day. Never replace this with an
-ML model, embedding, or LLM call, and don't suggest doing so.
+The logic in `analyseDay` / `recommend` must stay deterministic and fully
+explainable in one sentence: if a meeting's concentration demand exceeds
+the person's derived capacity in that block, flag it. Never replace this
+with an ML model, embedding, or LLM call, and don't suggest doing so.
 
 ## Data Is Synthetic
-Everything in src/logic/data.ts is synthetic demo data. Don't connect it to
-a real calendar API, database, or auth provider. Keep the "SYNTHETIC"
-comments intact when editing this file.
+`genData(seed)` builds the calendar, tasks, and check-ins. Don't connect
+it to a real calendar API, database, or auth provider. Keep the
+"Synthetic data — prototype" badge visible.
+
+## Privacy Split
+Manager view may show a 1–5 capacity band. It must never show energy,
+meals, breaks, demand, or confidence answers. Those stay on the employee
+Pulse / check-in screen.
 
 ## Scope Discipline
-Out of scope for this repo: user authentication, a database, a manager UI,
-live calendar integration, live LLM calls for the delegation message. If a
-request would require one of these, say so instead of building it.
+Out of scope for this repo: user authentication, a database, live
+calendar integration, a server-side LLM proxy. Message drafts may *try*
+a browser Claude call and must always fall back to the local template,
+labelled on screen.
 
 ## Code Style
-- TypeScript strict mode, typed props and function signatures
-- Tailwind CSS only, no additional CSS frameworks
+- One HTML file: vanilla JS + CSS in `index.html`
 - No animation libraries — the UI needs to read clearly on a projector
+- Both weeks and the recommendation card must stay on-screen at laptop
+  and projector widths (no clipping the next week or the Apply actions)
 - Comment any synthetic, simulated, or mocked behavior inline
 
 ## Protect the Happy Path
-Every change should leave `npm install && npm run dev` working and the core
-flow intact: dashboard → flagged day → recommendation → accept. Flag any
-change that risks breaking it before applying.
+Every change should leave opening `index.html` working, seed 4821, and
+the core flow intact: Amara → Thu 8 Overloaded → recommendation → Apply.
+Flag any change that risks breaking it before applying.

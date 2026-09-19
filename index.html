@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>True Margin — Platform Engineering</title>
+<style>
+:root{
+  --ink:#14212b;
+  --ink-soft:#54646f;
+  --paper:#f4f6f3;
+  --surface:#ffffff;
+  --rule:#cdd7d1;
+  --rule-soft:#e4eae5;
+  --deep:#1e5f74;
+  --garnet:#8c2f39;
+  --amber:#a8762a;
+  --cap5:#1e5f74;
+  --cap4:#5a8f96;
+  --cap3:#9fb4a8;
+  --cap2:#c9a179;
+  --cap1:#b46a52;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--sans);
+  font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--deep);outline-offset:2px}
+
+/* ---------- masthead ---------- */
+.masthead{
+  display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+  padding:18px 26px 14px;border-bottom:1px solid var(--rule);background:var(--surface);
+}
+.wordmark{font-family:var(--serif);font-size:25px;letter-spacing:-.01em}
+.org{color:var(--ink-soft);font-size:13px}
+.masthead-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.synthetic{
+  border:1px solid var(--amber);color:var(--amber);
+  padding:3px 9px;font-size:12px;border-radius:2px;background:#fdf8ee;
+}
+.seedbox{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
+.seedbox input{
+  width:62px;font:inherit;padding:3px 6px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);border-radius:2px;
+}
+.btn{
+  border:1px solid var(--rule);background:var(--surface);
+  padding:5px 11px;border-radius:2px;
+}
+.btn:hover{border-color:var(--ink-soft)}
+.btn-primary{background:var(--deep);border-color:var(--deep);color:#fff}
+.btn-primary:hover{background:#174b5c}
+.btn-quiet{border-color:transparent;color:var(--ink-soft);padding:5px 8px}
+.btn-quiet:hover{color:var(--ink);border-color:var(--rule)}
+
+.privacy-line{
+  padding:9px 26px;border-bottom:1px solid var(--rule-soft);
+  background:#eef3ef;font-size:13px;color:#2c4a42;
+}
+.privacy-line strong{font-weight:600}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:calc(100vh - 118px);width:100%}
+.rail{border-right:1px solid var(--rule);background:var(--surface);padding:16px 0}
+.rail h2,.main h2{
+  font-family:var(--serif);font-size:15px;font-weight:400;
+  margin:0 0 10px;padding:0 18px;color:var(--ink-soft);
+}
+.person{
+  display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;
+  width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;
+  padding:10px 14px;border-bottom:1px solid var(--rule-soft);
+}
+.person:hover{background:#f7faf8}
+.person[aria-current="true"]{border-left-color:var(--deep);background:#eef3ef}
+.person .nm{grid-column:1;grid-row:1;font-family:var(--serif);font-size:15px}
+.person .rl{grid-column:1;grid-row:2;font-size:12px;color:var(--ink-soft)}
+.flagcount{
+  grid-column:2;grid-row:1 / span 2;align-self:center;
+  font-size:12px;padding:2px 7px;border-radius:2px;
+  border:1px solid var(--rule);color:var(--ink-soft);
+}
+.flagcount.hot{background:#f7ecee;border-color:var(--garnet);color:var(--garnet)}
+
+.main{padding:16px 20px 48px;min-width:0;overflow-x:hidden}
+.hdr{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+.hdr h1{font-family:var(--serif);font-size:27px;font-weight:400;margin:0;letter-spacing:-.01em}
+.hdr .role{color:var(--ink-soft);font-size:14px;padding-bottom:4px}
+.hdr .spacer{flex:1}
+.subline{color:var(--ink-soft);font-size:13px;margin:0 0 18px}
+
+/* ---------- two week grid ---------- */
+.weeks{display:flex;flex-direction:column;gap:16px;width:100%;min-width:0;max-width:100%}
+.week{min-width:0;width:100%;max-width:100%}
+.week-label{font-size:12px;color:var(--ink-soft);margin-bottom:7px}
+.days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%;max-width:100%}
+.day{
+  background:var(--surface);border:1px solid var(--rule);border-radius:2px;
+  padding:8px 7px 9px;text-align:left;display:flex;flex-direction:column;
+  min-width:0;max-width:100%;width:auto;overflow:hidden;
+}
+.day:hover{border-color:var(--ink-soft)}
+.day[aria-current="true"]{border-color:var(--deep);box-shadow:inset 0 0 0 1px var(--deep)}
+.day .dname{font-size:12px;color:var(--ink-soft)}
+.day .dnum{font-family:var(--serif);font-size:17px;line-height:1.1}
+.strip{position:relative;height:88px;margin:7px 0 8px;background:var(--rule-soft);min-width:0;overflow:hidden}
+.strip .cap{position:absolute;left:0;right:0}
+.strip .mtg{
+  position:absolute;left:3px;right:3px;border:1px solid rgba(20,33,43,.55);
+  background:rgba(255,255,255,.72);
+}
+.strip .mtg.bad{border-color:var(--garnet);background:rgba(140,47,57,.24)}
+.strip .mtg.warn{border-color:var(--amber);background:rgba(168,118,42,.2)}
+.status{font-size:12px;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--cap3);flex:none}
+.status.over .dot{background:var(--garnet)}
+.status.risk .dot{background:var(--amber)}
+.status.clear .dot{background:var(--deep)}
+.status.over{color:var(--garnet)}
+.status.risk{color:var(--amber)}
+.status.clear{color:var(--ink-soft)}
+
+.legend{display:flex;gap:16px;align-items:center;margin:20px 0 0;font-size:12px;color:var(--ink-soft);flex-wrap:wrap}
+.scale{display:flex;align-items:center;gap:0}
+.scale i{width:20px;height:11px;display:block}
+
+/* ---------- day detail ---------- */
+.detail{margin-top:30px;border-top:1px solid var(--rule);padding-top:22px}
+.detail-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.detail-head h2{padding:0;margin:0;font-size:20px;color:var(--ink)}
+.detail-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr);gap:20px;align-items:start}
+.detail-grid > *{min-width:0}
+@media (max-width:1100px){
+  .detail-grid,.shell{grid-template-columns:1fr}
+  .rail{border-right:0;border-bottom:1px solid var(--rule)}
+}
+
+.timeline{position:relative;background:var(--surface);border:1px solid var(--rule)}
+.tl-row{display:grid;grid-template-columns:52px 1fr;height:26px;border-bottom:1px solid var(--rule-soft)}
+.tl-row:last-child{border-bottom:0}
+.tl-time{font-size:11px;color:var(--ink-soft);padding:5px 8px 0;text-align:right;border-right:1px solid var(--rule-soft)}
+.tl-cell{position:relative}
+.tl-cap{position:absolute;inset:0}
+.tl-capnum{position:absolute;right:6px;top:4px;font-size:11px;color:rgba(20,33,43,.6)}
+.tl-events{position:absolute;left:52px;right:0;top:0;bottom:0;pointer-events:none}
+.ev{
+  position:absolute;left:8px;right:10px;border:1px solid var(--ink);
+  background:rgba(255,255,255,.9);padding:3px 7px;font-size:12px;overflow:hidden;
+  border-radius:2px;
+}
+.ev .t{font-weight:600}
+.ev .m{color:var(--ink-soft);font-size:11px}
+.ev.bad{border-color:var(--garnet);background:rgba(140,47,57,.14)}
+.ev.warn{border-color:var(--amber);background:rgba(168,118,42,.12)}
+.ev.moved{border-style:dashed;border-color:var(--deep);background:rgba(30,95,116,.12)}
+
+/* ---------- findings ---------- */
+.finding{border:1px solid var(--rule);background:var(--surface);border-radius:2px;margin-bottom:12px}
+.finding.bad{border-left:3px solid var(--garnet)}
+.finding.warn{border-left:3px solid var(--amber)}
+.finding-body{padding:12px 14px}
+.finding h3{margin:0 0 4px;font-size:14px;font-family:var(--sans);font-weight:600}
+.because{color:var(--ink-soft);font-size:13px;margin:0 0 10px}
+.rec{background:#eef3ef;border:1px solid #cddbd3;padding:9px 11px;border-radius:2px;margin-bottom:9px}
+.rec .label{font-size:12px;color:#2c4a42;margin-bottom:2px}
+.rec .action{font-size:14px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+select{font:inherit;padding:4px 7px;border:1px solid var(--rule);background:var(--surface);border-radius:2px;color:var(--ink)}
+.resolved{padding:10px 14px;font-size:13px;color:var(--deep);display:flex;gap:8px;align-items:center}
+.dismissed{padding:10px 14px;font-size:13px;color:var(--ink-soft)}
+.empty{border:1px dashed var(--rule);padding:22px 16px;text-align:center;color:var(--ink-soft);border-radius:2px}
+
+/* ---------- draft ---------- */
+.draft{margin-top:8px;border-top:1px solid var(--rule-soft);padding:11px 14px 14px}
+.draft-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;color:var(--ink-soft)}
+.src{border:1px solid var(--rule);padding:1px 7px;border-radius:2px;font-size:11px}
+.src.live{border-color:var(--deep);color:var(--deep)}
+.src.local{border-color:var(--amber);color:var(--amber)}
+textarea{
+  width:100%;min-height:104px;font:inherit;padding:9px;border:1px solid var(--rule);
+  background:#fcfdfc;color:var(--ink);border-radius:2px;resize:vertical;line-height:1.5;
+}
+
+/* ---------- employee view ---------- */
+.checkins{border:1px solid var(--rule);background:var(--surface);border-radius:2px;overflow:hidden}
+.checkins table{border-collapse:collapse;width:100%;font-size:13px}
+.checkins th,.checkins td{padding:7px 10px;border-bottom:1px solid var(--rule-soft);text-align:left}
+.checkins th{font-weight:600;font-size:12px;color:var(--ink-soft);background:#f7faf8}
+.checkins tr:last-child td{border-bottom:0}
+.notice{
+  border:1px solid var(--deep);background:#eef3ef;color:#17414f;
+  padding:11px 13px;border-radius:2px;margin-bottom:14px;font-size:13px;
+}
+.toggle-row{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+.tab{border:1px solid var(--rule);background:var(--surface);padding:6px 13px;border-radius:2px;font-size:13px}
+.tab[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.foot{padding:20px 26px;border-top:1px solid var(--rule);color:var(--ink-soft);font-size:12px;background:var(--surface)}
+
+/* ---------- pulse check-in (employee only) ---------- */
+:root{ --pulse:#0b5d4e; --pulse-tint:#eaf3f1; --pulse-line:#cfe3de; }
+.pulse-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.pulse-slot{
+  display:flex;align-items:center;gap:7px;border:1px solid var(--rule);
+  background:var(--surface);padding:7px 12px;border-radius:3px;font-size:13px;
+}
+.pulse-slot.done{border-color:var(--pulse-line);background:var(--pulse-tint);color:var(--pulse)}
+.pulse-slot .tick{color:var(--pulse);font-size:12px}
+.btn-pulse{background:var(--pulse);border:1px solid var(--pulse);color:#fff;padding:7px 15px;border-radius:3px}
+.btn-pulse:hover{background:#094a3e}
+
+.overlay{
+  position:fixed;inset:0;background:rgba(20,33,43,.42);
+  display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+}
+.overlay[hidden]{display:none}
+.modal{
+  background:var(--surface);border-radius:10px;width:100%;max-width:430px;
+  box-shadow:0 18px 50px rgba(20,33,43,.26);overflow:hidden;
+}
+.modal-head{display:flex;align-items:flex-start;gap:11px;padding:16px 18px 13px;border-bottom:1px solid var(--rule-soft)}
+.modal-mark{
+  width:34px;height:34px;border-radius:50%;background:var(--pulse-tint);color:var(--pulse);
+  display:flex;align-items:center;justify-content:center;flex:none;font-size:16px;
+}
+.modal-title{font-family:var(--serif);font-size:17px;line-height:1.2}
+.modal-tag{font-size:11px;color:var(--pulse);background:var(--pulse-tint);padding:2px 7px;border-radius:9px;margin-left:7px;vertical-align:2px}
+.modal-priv{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.modal-x{margin-left:auto;border:0;background:none;font-size:19px;color:var(--ink-soft);line-height:1;padding:2px 4px}
+.modal-body{padding:15px 18px 6px;max-height:62vh;overflow:auto}
+.q{margin-bottom:14px}
+.q-label{font-size:13px;font-weight:600;margin-bottom:7px;display:flex;justify-content:space-between;gap:10px}
+.q-label .ans{font-weight:400;color:var(--pulse)}
+.opts{display:grid;gap:7px}
+.opts.c5{grid-template-columns:repeat(5,1fr)}
+.opts.c4{grid-template-columns:repeat(4,1fr)}
+.opts.c3{grid-template-columns:repeat(3,1fr)}
+.opts.c2{grid-template-columns:repeat(2,1fr)}
+.opt{
+  border:1px solid var(--pulse-line);background:#f7fbfa;border-radius:6px;
+  border-bottom:3px solid var(--c,var(--pulse-line));
+  padding:9px 5px 7px;font-size:12px;text-align:center;line-height:1.3;color:var(--ink);
+}
+.opt:hover{border-color:var(--c,var(--pulse));border-bottom-color:var(--c,var(--pulse))}
+.opt[aria-pressed="true"],
+.pair .opt[aria-pressed="true"]{
+  background:var(--c,var(--pulse));border-color:var(--c,var(--pulse));color:#fff;
+}
+.opt .glyph{display:block;margin:0 auto 3px;color:var(--c,var(--ink-soft));height:16px}
+.opt[aria-pressed="true"] .glyph{color:#fff}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.pair .q{margin-bottom:0;background:#f4f9f8;border:1px solid var(--pulse-line);border-radius:7px;padding:10px 11px}
+.pair .opt{background:var(--surface)}
+.modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:13px 18px 16px;border-top:1px solid var(--rule-soft);background:#fbfdfc}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <span class="wordmark">True&nbsp;Margin</span>
+  <span class="org" id="orgLine">Oracle · Platform Engineering · manager view</span>
+  <div class="masthead-right">
+    <span class="synthetic">Synthetic data — prototype</span>
+    <span class="seedbox">
+      Seed <input id="seed" type="number" value="4821" min="1" max="99999">
+      <button class="btn" id="regen">Regenerate</button>
+    </span>
+  </div>
+</header>
+
+<div class="privacy-line" id="privacyLine">
+  <strong>What you can see:</strong> a capacity level from 1 to 5, derived from each person's own check-ins.
+  You cannot see the check-in answers behind it, and neither can HR.
+</div>
+
+<div class="shell">
+  <nav class="rail" aria-label="Team">
+    <h2>Your team</h2>
+    <div id="roster"></div>
+  </nav>
+
+  <main class="main">
+    <div class="hdr">
+      <h1 id="pname">—</h1>
+      <span class="role" id="prole"></span>
+      <span class="spacer"></span>
+    </div>
+    <p class="subline" id="psub"></p>
+
+    <div class="toggle-row">
+      <button class="tab" id="tabMgr" aria-pressed="true">Manager view</button>
+      <button class="tab" id="tabEmp" aria-pressed="false">View as employee</button>
+    </div>
+
+    <section id="mgrView">
+      <div class="weeks" id="weeks"></div>
+      <div class="legend">
+        <span class="scale" aria-hidden="true">
+          <i style="background:var(--cap1)"></i><i style="background:var(--cap2)"></i><i style="background:var(--cap3)"></i><i style="background:var(--cap4)"></i><i style="background:var(--cap5)"></i>
+        </span>
+        <span>Capacity 1 (depleted) to 5 (sharp), across 09:00–18:00</span>
+        <span>Outlined blocks are meetings. Red means the meeting asks for more concentration than the person has.</span>
+      </div>
+      <div class="detail" id="detail"></div>
+    </section>
+
+    <section id="empView" hidden>
+      <div class="notice">
+        This is what <span id="empName">the employee</span> sees about themselves. The five check-in answers below
+        never leave this screen — the manager view shows only the capacity number derived from them.
+      </div>
+      <div class="pulse-bar" id="pulseBar"></div>
+      <div class="checkins" id="checkins"></div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="pulseOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pulseTitle">
+    <div class="modal-head">
+      <span class="modal-mark" aria-hidden="true">&#9201;</span>
+      <div>
+        <div class="modal-title" id="pulseTitle">Midday Pulse Ritual<span class="modal-tag">15-sec check-in</span></div>
+        <div class="modal-priv">Private to you. Never shared with your manager or HR.</div>
+      </div>
+      <button class="modal-x" id="pulseClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="pulseBody"></div>
+    <div class="modal-foot">
+      <button class="btn" id="pulseCancel">Cancel</button>
+      <button class="btn-pulse" id="pulseSave">Save &amp; complete</button>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">
+  Calendar, tasks and check-ins are randomly generated from the seed above. Recommendation logic is deterministic
+  and rule-based. The only generative component is the message draft, which is labelled at the point of use.
+</footer>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. SEEDED RANDOMNESS
+   ============================================================ */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+var rnd = mulberry32(4821);
+function ri(lo,hi){ return lo + Math.floor(rnd()*(hi-lo+1)); }
+function pick(arr){ return arr[Math.floor(rnd()*arr.length)]; }
+function chance(p){ return rnd() < p; }
+
+/* ============================================================
+   2. CONSTANTS
+   ============================================================ */
+var SLOT_START = 18;           // 09:00 in half-hour units from midnight
+var SLOTS = 18;                // 09:00 -> 18:00
+var DAYS = 10;                 // two working weeks
+var DAY_NAMES = ["Mon","Tue","Wed","Thu","Fri"];
+
+function slotLabel(i){
+  var half = SLOT_START + i;
+  var h = Math.floor(half/2), m = (half%2)*30;
+  return (h<10?"0":"")+h+":"+(m===0?"00":"30");
+}
+
+var MEETING_KINDS = [
+  { title:"Stand-up",              dur:1, demand:1, movable:false, window:[0,1] },
+  { title:"Sprint planning",       dur:4, demand:3, movable:false, window:[2,8] },
+  { title:"Design review",         dur:3, demand:4, movable:true,  window:[2,14] },
+  { title:"Architecture deep dive",dur:4, demand:5, movable:true,  window:[2,12] },
+  { title:"Incident post-mortem",  dur:3, demand:4, movable:false, window:[2,14] },
+  { title:"1:1 with manager",      dur:2, demand:2, movable:true,  window:[2,15] },
+  { title:"Customer escalation",   dur:2, demand:4, movable:false, window:[2,14] },
+  { title:"Cross-team sync",       dur:2, demand:2, movable:true,  window:[2,15] },
+  { title:"Candidate interview",   dur:3, demand:4, movable:true,  window:[2,13] },
+  { title:"Release readiness",     dur:2, demand:3, movable:true,  window:[4,14] },
+  { title:"All-hands",             dur:2, demand:1, movable:false, window:[8,12] },
+  { title:"Vendor demo",           dur:2, demand:2, movable:true,  window:[4,14] }
+];
+
+var TASK_KINDS = [
+  { title:"Migrate auth service to the new token format", conc:5 },
+  { title:"Write the Q4 capacity forecast",               conc:4 },
+  { title:"Fix the flaky integration test suite",         conc:3 },
+  { title:"Review the partner API contract",              conc:4 },
+  { title:"Draft the incident runbook",                   conc:3 },
+  { title:"Refactor the billing reconciliation job",      conc:5 },
+  { title:"Update the on-call rotation docs",             conc:2 },
+  { title:"Benchmark the new cache layer",                conc:4 }
+];
+
+var PEOPLE_SEED = [
+  { id:"p1", name:"Amara Okafor",   role:"Senior Developer",   chrono:+0.6 },
+  { id:"p2", name:"Devansh Rao",    role:"Developer",          chrono:-0.5 },
+  { id:"p3", name:"Lena Vasquez",   role:"Staff Engineer",     chrono:+0.2 },
+  { id:"p4", name:"Tomas Brandt",   role:"Developer",          chrono:-0.8 },
+  { id:"p5", name:"Priya Raghavan", role:"Engineering Manager",chrono:+0.3 }
+];
+
+/* ============================================================
+   3. DATA GENERATION
+   Check-ins are generated first. Capacity is DERIVED from them,
+   so the sensitive data actually drives the engine.
+   ============================================================ */
+var DATA = null;
+
+function baseCurve(slot, chrono){
+  // 09:00 warm-up, late-morning peak, post-lunch trough, partial afternoon recovery.
+  var t = slot / (SLOTS-1);                       // 0 .. 1
+  var morning  = Math.exp(-Math.pow((t-0.20-0.06*chrono)/0.22,2));
+  var afternoon= 0.72*Math.exp(-Math.pow((t-0.72-0.06*chrono)/0.20,2));
+  var trough   = 0.80*Math.exp(-Math.pow((t-0.47)/0.11,2));
+  return morning + afternoon - trough;            // roughly -0.1 .. 1.1
+}
+
+function genData(seed){
+  rnd = mulberry32(seed);
+
+  var people = PEOPLE_SEED.map(function(p){
+    return { id:p.id, name:p.name, role:p.role, chrono:p.chrono };
+  });
+  var allIds = people.map(function(x){ return x.id; });
+
+  var meetings = [];
+  var mid = 0;
+  var busy = {};                                   // personId -> day -> [[from,to]]
+  allIds.forEach(function(id){ busy[id] = []; for(var d=0; d<DAYS; d++) busy[id].push([]); });
+
+  function freeFor(ids, day, from, to){
+    return ids.every(function(id){
+      return busy[id][day].every(function(u){ return to <= u[0] || from >= u[1]; });
+    });
+  }
+  function book(ids, day, from, to){
+    ids.forEach(function(id){ busy[id][day].push([from,to]); });
+  }
+
+  // one stand-up for the whole team, every morning
+  for(var d=0; d<DAYS; d++){
+    meetings.push({ id:"m"+(mid++), person:"p5", day:d, slot:1, dur:1,
+                    title:"Stand-up", demand:1, movable:false, attendees:allIds.slice() });
+    book(allIds, d, 1, 2);
+  }
+
+  // each person owns a handful of meetings and pulls one or two colleagues in
+  people.forEach(function(p){
+    for(var d=0; d<DAYS; d++){
+      var count = ri(0,2);
+      for(var k=0;k<count;k++){
+        var kind = pick(MEETING_KINDS.filter(function(m){ return m.title!=="Stand-up"; }));
+        var att = [p.id];
+        people.forEach(function(o){
+          if(o.id !== p.id && chance(0.28) && att.length < 3) att.push(o.id);
+        });
+        var placed = false, s = 0;
+        for(var tries=0; tries<16 && !placed; tries++){
+          s = ri(kind.window[0], Math.min(kind.window[1], SLOTS-kind.dur));
+          if(freeFor(att, d, s, s+kind.dur)) placed = true;
+        }
+        if(!placed) continue;
+        book(att, d, s, s+kind.dur);
+        meetings.push({ id:"m"+(mid++), person:p.id, day:d, slot:s, dur:kind.dur,
+                        title:kind.title, demand:kind.demand, movable:kind.movable, attendees:att });
+      }
+    }
+  });
+
+  // manager-assigned tasks
+  var tasks = [];
+  var tid = 0;
+  people.forEach(function(p){
+    var n = ri(2,3);
+    var poolIdx = 0;
+    for(var i=0;i<n;i++){
+      var k = TASK_KINDS[(ri(0,TASK_KINDS.length-1) + poolIdx) % TASK_KINDS.length];
+      poolIdx++;
+      tasks.push({
+        id:"t"+(tid++), person:p.id, title:k.title,
+        hours: ri(2,4)/1,                 // whole hours
+        conc: k.conc,
+        movable: chance(0.75),
+        due: ri(2, DAYS-1)
+      });
+    }
+  });
+
+  // check-ins: 3 per day, 5 fields, private to the employee
+  var checkins = {};
+  people.forEach(function(p){
+    checkins[p.id] = [];
+    var carry = 0;
+    for(var d=0; d<DAYS; d++){
+      var load = meetings.filter(function(m){ return m.person===p.id && m.day===d; })
+                         .reduce(function(a,m){ return a + m.dur*m.demand; }, 0);
+      carry = clamp(carry*0.45 + Math.max(0, (load-18)*0.045), 0, 1.1);
+      var dayShift = (rnd()-0.5)*2.0;              // how the night before went
+      var row = [];
+      ["Morning","Midday","Afternoon"].forEach(function(part, idx){
+        var slotAnchor = [1, 8, 14][idx];
+        var b = baseCurve(slotAnchor, p.chrono);
+        var energy = clamp(Math.round(3.0 + b*2.1 + dayShift + (rnd()-0.5)*0.9 - carry), 1, 5);
+        var ate = idx===0 ? chance(0.8) : (idx===1 ? chance(0.6) : chance(0.88));
+        var broke = chance(0.45 + 0.08*idx);
+        var demand = clamp(Math.round(1.9 + load/14 + (rnd()-0.5)*1.3), 1, 5);
+        var confidence = clamp(Math.round(5.4 - demand*0.5 + energy*0.3 + (rnd()-0.5)*1.1), 1, 5);
+        row.push({ part:part, energy:energy, ate:ate, broke:broke, demand:demand, confidence:confidence });
+      });
+      checkins[p.id].push(row);
+    }
+  });
+
+  return { people:people, meetings:meetings, tasks:tasks, checkins:checkins,
+           dismissed:{}, edits:{}, drafts:{} };
+}
+
+function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+
+/* ============================================================
+   4. CAPACITY — derived from check-ins, not invented separately
+   ============================================================ */
+function capacityAt(personId, day, slot){
+  var rows = DATA.checkins[personId][day];
+  var anchors = [1, 8, 14];
+  // interpolate between the three check-in anchors
+  var lo = 0;
+  for(var i=0;i<anchors.length;i++){ if(slot >= anchors[i]) lo = i; }
+  var hi = Math.min(lo+1, anchors.length-1);
+  var span = anchors[hi]-anchors[lo];
+  var f = span === 0 ? 0 : clamp((slot-anchors[lo])/span, 0, 1);
+  function score(r){ return r.energy*0.72 + r.confidence*0.18 + (6-r.demand)*0.18 + (r.ate?0.1:-0.5) + (r.broke?0.08:-0.12); }
+  var v = score(rows[lo])*(1-f) + score(rows[hi])*f;
+  var person = DATA.people.filter(function(p){return p.id===personId;})[0];
+  v += baseCurve(slot, person.chrono)*0.35 - 0.2;
+  return clamp(Math.round(v), 1, 5);
+}
+
+function capColor(c){
+  return ["","var(--cap1)","var(--cap2)","var(--cap3)","var(--cap4)","var(--cap5)"][c];
+}
+
+/* ============================================================
+   5. MEETING STATE (after manager actions)
+   ============================================================ */
+function meetingState(m){
+  var e = DATA.edits[m.id];
+  if(!e) return { day:m.day, slot:m.slot, dur:m.dur, cancelled:false, changed:false, note:"" };
+  if(e.cancelled) return { day:m.day, slot:m.slot, dur:m.dur, cancelled:true, changed:true, note:"cancelled" };
+  return {
+    day: e.day !== undefined ? e.day : m.day,
+    slot: e.slot !== undefined ? e.slot : m.slot,
+    dur: e.dur !== undefined ? e.dur : m.dur,
+    cancelled:false, changed:true,
+    note: e.dur !== undefined ? "shortened by you" : "moved by you"
+  };
+}
+function changeCount(){ return Object.keys(DATA.edits).length; }
+
+function meetingsFor(personId, day){
+  return DATA.meetings.filter(function(m){
+    if(m.attendees.indexOf(personId) === -1) return false;
+    var st = meetingState(m);
+    return !st.cancelled && st.day === day;
+  }).map(function(m){
+    var st = meetingState(m);
+    return { ref:m, slot:st.slot, dur:st.dur, title:m.title, demand:m.demand,
+             movable:m.movable, changed:st.changed, note:st.note, owner:m.person };
+  }).sort(function(a,b){ return a.slot-b.slot; });
+}
+
+function isFree(personId, day, slot, dur, ignoreId){
+  var list = meetingsFor(personId, day);
+  for(var i=0;i<list.length;i++){
+    if(list[i].ref.id === ignoreId) continue;
+    if(slot < list[i].slot + list[i].dur && slot + dur > list[i].slot) return false;
+  }
+  return true;
+}
+
+/* ============================================================
+   6. RULE ENGINE — deterministic, no model involved
+   Flag a meeting when its concentration demand exceeds the person's
+   derived capacity in that block. Strain of 2+ (or capacity 1) is
+   overloaded; strain of 1 is at risk. Recommendations stay rule-based.
+   ============================================================ */
+function analyseDay(personId, day){
+  var findings = [];
+  meetingsFor(personId, day).forEach(function(mt){
+    var caps = [];
+    for(var s=mt.slot; s<mt.slot+mt.dur; s++) caps.push(capacityAt(personId, day, s));
+    var low = Math.min.apply(null, caps);
+    var strain = mt.demand - low;
+    if(strain >= 2 || (low <= 1 && mt.demand >= 2)){
+      findings.push(makeFinding(personId, day, mt, low, "bad"));
+    } else if(strain === 1){
+      findings.push(makeFinding(personId, day, mt, low, "warn"));
+    }
+  });
+  return findings;
+}
+
+function makeFinding(personId, day, mt, low, sev){
+  return {
+    key: mt.ref.id + "@" + day,
+    id: mt.ref.id, personId: personId, day: day, mt: mt, low: low, sev: sev,
+    rec: recommend(personId, day, mt, low)
+  };
+}
+
+function recommend(personId, day, mt, low){
+  // Rule 1 — capacity bottomed out. Clear the block, whatever it is.
+  if(low <= 1){
+    return { type:"cancel",
+             action:"Cancel this instance",
+             why:"Capacity is at 1 for the whole block. Nothing useful comes out of a demand-"+mt.demand+" meeting here." };
+  }
+  // Rule 2 — meeting can move. Find a slot that clears everyone and matches the demand.
+  if(mt.movable){
+    var best = findSlot(mt, personId, day);
+    if(best){
+      return { type:"move", target:best,
+               action:"Move to "+dayLabel(best.day)+", "+slotLabel(best.slot),
+               why:"Every attendee is free and capacity there is "+best.cap+", which covers a demand of "+mt.demand+"." };
+    }
+    var near = findSlot(mt, personId, day, mt.demand-1);
+    if(near){
+      return { type:"move", target:near,
+               action:"Move to "+dayLabel(near.day)+", "+slotLabel(near.slot),
+               why:"Nothing in the next few days fully covers a demand of "+mt.demand+". This is the best available at capacity "+near.cap+"." };
+    }
+  }
+  // Rule 3 — light enough to take off the calendar entirely.
+  if(mt.demand <= 2){
+    return { type:"async", action:"Replace with a written update",
+             why:"Demand is only "+mt.demand+". It does not need a live block on a day running at capacity "+low+"." };
+  }
+  // Rule 4 — no slot. Hand it to someone with room.
+  var cover = findCover(mt, day) || findCover(mt, day, mt.demand-1);
+  if(cover){
+    return { type:"delegate", target:cover,
+             action:"Ask "+nameOf(cover.person)+" to cover",
+             why:nameOf(cover.person)+" is free and running at capacity "+cover.cap+" in that block." };
+  }
+  return { type:"shorten", action:"Cut to 30 minutes and send an agenda first",
+           why:"No better slot exists in the next three days and nobody else is free. Shortening is the only lever left." };
+}
+
+function findSlot(mt, personId, day, floor){
+  var need = floor === undefined ? mt.demand : floor;
+  var best = null;
+  for(var d=day; d<Math.min(DAYS, day+4); d++){
+    for(var s=0; s<=SLOTS-mt.dur; s++){
+      if(d===day && s===mt.slot) continue;
+      var caps = [];
+      for(var k=s;k<s+mt.dur;k++) caps.push(capacityAt(personId, d, k));
+      var low = Math.min.apply(null, caps);
+      if(low < need) continue;
+      var ok = mt.ref.attendees.every(function(a){ return isFree(a, d, s, mt.dur, mt.ref.id); });
+      if(!ok) continue;
+      var cost = (d-day)*3 + Math.abs(s-mt.slot)*0.2 - low*2;
+      if(!best || cost < best.cost) best = { day:d, slot:s, cap:low, cost:cost };
+    }
+  }
+  return best;
+}
+
+function findCover(mt, day, floor){
+  var need = floor === undefined ? mt.demand : floor;
+  var best = null;
+  DATA.people.forEach(function(p){
+    if(mt.ref.attendees.indexOf(p.id) !== -1) return;
+    if(!isFree(p.id, day, mt.slot, mt.dur, null)) return;
+    var caps = [];
+    for(var k=mt.slot;k<mt.slot+mt.dur;k++) caps.push(capacityAt(p.id, day, k));
+    var low = Math.min.apply(null, caps);
+    if(low < need) return;
+    if(!best || low > best.cap) best = { person:p.id, cap:low };
+  });
+  return best;
+}
+
+function dayStatus(personId, day){
+  var f = analyseDay(personId, day).filter(function(x){ return !DATA.dismissed[x.key]; });
+  if(f.some(function(x){ return x.sev==="bad"; })) return "over";
+  if(f.length) return "risk";
+  return "clear";
+}
+
+function unresolvedCount(personId){
+  var n = 0;
+  for(var d=0; d<DAYS; d++){
+    analyseDay(personId, d).forEach(function(f){
+      if(!DATA.dismissed[f.key] && f.sev==="bad") n++;
+    });
+  }
+  return n;
+}
+
+function nameOf(id){
+  var p = DATA.people.filter(function(x){ return x.id===id; })[0];
+  return p ? p.name.split(" ")[0] : id;
+}
+function fullName(id){
+  var p = DATA.people.filter(function(x){ return x.id===id; })[0];
+  return p ? p.name : id;
+}
+var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function dateOf(d){
+  var start = new Date(2026, 9, 5);              // Monday 5 October 2026
+  var dt = new Date(start.getTime());
+  dt.setDate(start.getDate() + Math.floor(d/5)*7 + (d%5));
+  return dt;
+}
+function dayLabel(d){
+  var dt = dateOf(d);
+  return DAY_NAMES[d%5] + " " + dt.getDate() + " " + MONTHS[dt.getMonth()];
+}
+
+/* ============================================================
+   7. MESSAGE DRAFT — the one generative touchpoint
+   Tries a live model call, falls back to a local template,
+   and labels on screen which one you are looking at.
+   ============================================================ */
+function localDraft(f){
+  var who = nameOf(f.personId);
+  var r = f.rec;
+  if(r.type==="cancel"){
+    return "Hi "+who+",\n\nI'm cancelling "+f.mt.title+" on "+dayLabel(f.day)+". Looking at the week, that block is the wrong place for it and I'd rather you had the time back than sat through it.\n\nIf anything in there is urgent, send it to me in writing and I'll pick it up.\n\nPriya";
+  }
+  if(r.type==="move"){
+    return "Hi "+who+",\n\nI'm moving "+f.mt.title+" to "+dayLabel(r.target.day)+" at "+slotLabel(r.target.slot)+". The original slot was a bad fit against everything else that day, and this one is clear for everyone invited.\n\nShout if that lands badly and I'll find another time.\n\nPriya";
+  }
+  if(r.type==="async"){
+    return "Hi "+who+",\n\nLet's drop "+f.mt.title+" on "+dayLabel(f.day)+" and do it in writing instead. A short update in the channel covers it, and it gives you the block back.\n\nPriya";
+  }
+  if(r.type==="delegate"){
+    return "Hi "+nameOf(r.target.person)+",\n\nCould you cover "+f.mt.title+" on "+dayLabel(f.day)+" at "+slotLabel(f.mt.slot)+"? "+who+"'s week is heavily loaded and you're clear at that time. Happy to brief you beforehand.\n\nNo problem if it doesn't work — let me know.\n\nPriya";
+  }
+  return "Hi "+who+",\n\nI'm cutting "+f.mt.title+" on "+dayLabel(f.day)+" to 30 minutes and sending an agenda in advance so we can keep it tight. It's a fixed commitment so I can't move it, but I can make it shorter.\n\nPriya";
+}
+
+function promptFor(f){
+  return "You are drafting a short internal message from an engineering manager to a team member.\n"+
+    "Facts:\n"+
+    "- Recipient: "+fullName(f.personId)+"\n"+
+    "- Meeting: "+f.mt.title+" on "+dayLabel(f.day)+" at "+slotLabel(f.mt.slot)+"\n"+
+    "- Manager's decision: "+f.rec.action+"\n"+
+    "- Reason: "+f.rec.why+"\n\n"+
+    "Rules: 3 short paragraphs maximum. Plain, warm, direct. Refer only to workload and scheduling. "+
+    "Never mention energy, sleep, health, wellbeing, stress or capacity scores. Sign off as Priya. "+
+    "Return only the message text.";
+}
+
+function draftMessage(f, cb){
+  var payload = {
+    model:"claude-sonnet-4-6",
+    max_tokens:1000,
+    messages:[{ role:"user", content: promptFor(f) }]
+  };
+  var done = false;
+  var timer = setTimeout(function(){
+    if(!done){ done = true; cb(localDraft(f), "local"); }
+  }, 6000);
+
+  try{
+    fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+    }).then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+      .then(function(d){
+        if(done) return;
+        var txt = (d.content||[]).filter(function(x){return x.type==="text";})
+                  .map(function(x){return x.text;}).join("\n").trim();
+        if(!txt) throw new Error("empty");
+        done = true; clearTimeout(timer); cb(txt, "live");
+      })
+      .catch(function(){
+        if(done) return;
+        done = true; clearTimeout(timer); cb(localDraft(f), "local");
+      });
+  }catch(e){
+    if(!done){ done = true; clearTimeout(timer); cb(localDraft(f), "local"); }
+  }
+}
+
+/* ============================================================
+   8. RENDER
+   ============================================================ */
+var selPerson = "p1";
+var selDay = null;
+var mode = "mgr";
+
+function el(tag, cls, txt){
+  var n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(txt !== undefined) n.textContent = txt;
+  return n;
+}
+
+function renderRoster(){
+  var root = document.getElementById("roster");
+  root.innerHTML = "";
+  DATA.people.forEach(function(p){
+    var b = el("button","person");
+    b.setAttribute("aria-current", p.id===selPerson ? "true" : "false");
+    if(p.id!==selPerson) b.removeAttribute("aria-current");
+    var nm = el("span","nm",p.name);
+    var rl = el("span","rl",p.role);
+    var n = unresolvedCount(p.id);
+    var fc = el("span","flagcount" + (n?" hot":""), n ? n+" flagged" : "clear");
+    b.appendChild(nm); b.appendChild(fc); b.appendChild(rl);
+    b.onclick = function(){ selPerson = p.id; selDay = null; render(); };
+    root.appendChild(b);
+  });
+}
+
+function renderWeeks(){
+  var root = document.getElementById("weeks");
+  root.innerHTML = "";
+  [0,1].forEach(function(w){
+    var wk = el("div","week");
+    wk.appendChild(el("div","week-label", w===0 ? "This week" : "Next week"));
+    var days = el("div","days");
+    for(var i=0;i<5;i++){
+      (function(d){
+        var b = el("button","day");
+        if(selDay===d) b.setAttribute("aria-current","true");
+        else b.removeAttribute("aria-current");
+        b.appendChild(el("span","dname", DAY_NAMES[i]));
+        b.appendChild(el("div","dnum", String(dateOf(d).getDate())));
+
+        var strip = el("div","strip");
+        for(var s=0;s<SLOTS;s++){
+          var c = el("div","cap");
+          c.style.top = (s/SLOTS*100)+"%";
+          c.style.height = (100/SLOTS)+"%";
+          c.style.background = capColor(capacityAt(selPerson, d, s));
+          strip.appendChild(c);
+        }
+        var findings = analyseDay(selPerson, d);
+        meetingsFor(selPerson, d).forEach(function(mt){
+          var f = findings.filter(function(x){ return x.id===mt.ref.id; })[0];
+          var cls = "mtg";
+          if(f && !DATA.dismissed[f.key]) cls += f.sev==="bad" ? " bad" : " warn";
+          var box = el("div", cls);
+          box.style.top = (mt.slot/SLOTS*100)+"%";
+          box.style.height = (mt.dur/SLOTS*100)+"%";
+          box.title = mt.title;
+          strip.appendChild(box);
+        });
+        b.appendChild(strip);
+
+        var st = dayStatus(selPerson, d);
+        var row = el("div","status "+st);
+        row.appendChild(el("span","dot"));
+        row.appendChild(el("span",null, st==="over" ? "Overloaded" : st==="risk" ? "At risk" : "Clear"));
+        b.appendChild(row);
+
+        b.onclick = function(){ selDay = (selDay===d ? null : d); render(); };
+        days.appendChild(b);
+      })(w*5+i);
+    }
+    wk.appendChild(days);
+    root.appendChild(wk);
+  });
+}
+
+function renderDetail(){
+  var root = document.getElementById("detail");
+  root.innerHTML = "";
+  if(selDay === null){
+    var e = el("div","empty","Pick a day above to see the hour-by-hour view and what to do about it.");
+    root.appendChild(e);
+    return;
+  }
+
+  var head = el("div","detail-head");
+  head.appendChild(el("h2", null, dayLabel(selDay) + " — " + fullName(selPerson)));
+  var findings = analyseDay(selPerson, selDay);
+  var live = findings.filter(function(f){ return !DATA.dismissed[f.key]; });
+  head.appendChild(el("span","org", live.length ? live.length+" thing"+(live.length>1?"s":"")+" worth changing" : "Nothing to change"));
+  root.appendChild(head);
+
+  var grid = el("div","detail-grid");
+
+  /* timeline */
+  var tl = el("div","timeline");
+  for(var s=0;s<SLOTS;s++){
+    var row = el("div","tl-row");
+    row.appendChild(el("div","tl-time", slotLabel(s)));
+    var cell = el("div","tl-cell");
+    var cap = el("div","tl-cap");
+    var cv = capacityAt(selPerson, selDay, s);
+    cap.style.background = capColor(cv);
+    cell.appendChild(cap);
+    cell.appendChild(el("span","tl-capnum", String(cv)));
+    row.appendChild(cell);
+    tl.appendChild(row);
+  }
+  var ev = el("div","tl-events");
+  meetingsFor(selPerson, selDay).forEach(function(mt){
+    var f = findings.filter(function(x){ return x.id===mt.ref.id; })[0];
+    var cls = "ev";
+    if(mt.changed) cls += " moved";
+    else if(f && !DATA.dismissed[f.key]) cls += f.sev==="bad" ? " bad" : " warn";
+    var box = el("div", cls);
+    box.style.top = (mt.slot*26+2)+"px";
+    box.style.height = (mt.dur*26-4)+"px";
+    var t = el("div","t", mt.title);
+    var m = el("div","m", "needs " + mt.demand + ", " + (mt.movable ? "movable" : "fixed") + (mt.note ? " — " + mt.note : ""));
+    box.appendChild(t); box.appendChild(m);
+    ev.appendChild(box);
+  });
+  tl.appendChild(ev);
+  tl.style.position = "relative";
+  grid.appendChild(tl);
+
+  /* findings column */
+  var col = el("div");
+  var tasks = DATA.tasks.filter(function(t){ return t.person===selPerson && t.due===selDay; });
+
+  if(!live.length && !tasks.length){
+    col.appendChild(el("div","empty","This day fits. Capacity covers everything on the calendar."));
+  }
+
+  live.forEach(function(f){ col.appendChild(renderFinding(f)); });
+
+  tasks.forEach(function(t){
+    var fit = taskFits(t);
+    var card = el("div","finding" + (fit ? "" : " warn"));
+    var body = el("div","finding-body");
+    body.appendChild(el("h3", null, "Task due today: " + t.title));
+    body.appendChild(el("p","because",
+      t.hours + "h of work needing capacity " + t.conc + ". " +
+      (fit ? "There is a run of open time at capacity " + fit.cap + " starting " + slotLabel(fit.slot) + "."
+           : "No open run of " + t.hours + "h reaches capacity " + t.conc + " today.")));
+    if(!fit){
+      var rec = el("div","rec");
+      rec.appendChild(el("div","label","Recommended"));
+      rec.appendChild(el("div","action", t.movable
+        ? "Push the due date to " + dayLabel(Math.min(DAYS-1, t.due+1)) + ", or clear a meeting above to open a block"
+        : "Fixed deadline — clear a meeting above to open a block"));
+      body.appendChild(rec);
+    }
+    card.appendChild(body);
+    col.appendChild(card);
+  });
+
+  grid.appendChild(col);
+  root.appendChild(grid);
+}
+
+function taskFits(t){
+  var need = t.hours*2;
+  var run = 0, best = null;
+  for(var s=0;s<SLOTS;s++){
+    var busy = !isFree(t.person, t.due, s, 1, null);
+    var cap = capacityAt(t.person, t.due, s);
+    if(busy || cap < t.conc){ run = 0; continue; }
+    run++;
+    if(run >= need){ best = { slot: s-need+1, cap: cap }; break; }
+  }
+  return best;
+}
+
+function renderFinding(f){
+  var card = el("div","finding " + f.sev);
+  var body = el("div","finding-body");
+
+  body.appendChild(el("h3", null, f.mt.title + " at " + slotLabel(f.mt.slot)));
+  body.appendChild(el("p","because",
+    "Asks for concentration " + f.mt.demand + ". " + nameOf(f.personId) +
+    " is running at " + f.low + " through that block, and the meeting is " +
+    (f.mt.movable ? "movable" : "fixed") + "."));
+
+  var rec = el("div","rec");
+  rec.appendChild(el("div","label","Recommended"));
+  rec.appendChild(el("div","action", f.rec.action));
+  rec.appendChild(el("div","label", f.rec.why));
+  body.appendChild(rec);
+
+  var acts = el("div","actions");
+
+  var apply = el("button","btn btn-primary","Apply");
+  apply.onclick = function(){ applyRec(f); };
+  acts.appendChild(apply);
+
+  if(f.mt.movable){
+    var sel = document.createElement("select");
+    sel.appendChild(new Option("Move somewhere else…",""));
+    for(var d=f.day; d<Math.min(DAYS,f.day+3); d++){
+      for(var s=0;s<=SLOTS-f.mt.dur;s++){
+        if(!f.mt.ref.attendees.every(function(a){ return isFree(a,d,s,f.mt.dur,f.id); })) continue;
+        var caps=[]; for(var k=s;k<s+f.mt.dur;k++) caps.push(capacityAt(f.personId,d,k));
+        var low=Math.min.apply(null,caps);
+        sel.appendChild(new Option(dayLabel(d)+" "+slotLabel(s)+" — capacity "+low, d+":"+s));
+      }
+    }
+    sel.onchange = function(){
+      if(!sel.value) return;
+      var parts = sel.value.split(":");
+      DATA.edits[f.id] = { day:+parts[0], slot:+parts[1] };
+      selDay = +parts[0];
+      render();
+    };
+    acts.appendChild(sel);
+  }
+
+  var cancel = el("button","btn","Cancel meeting");
+  cancel.onclick = function(){ DATA.edits[f.id] = { cancelled:true }; render(); };
+  acts.appendChild(cancel);
+
+  var dismiss = el("button","btn btn-quiet","Leave it");
+  dismiss.onclick = function(){ DATA.dismissed[f.key] = true; render(); };
+  acts.appendChild(dismiss);
+
+  body.appendChild(acts);
+  card.appendChild(body);
+
+  var draft = el("div","draft");
+  var dh = el("div","draft-head");
+  dh.appendChild(el("span",null,"Message to send"));
+  var srcBadge = el("span","src local","writing…");
+  dh.appendChild(srcBadge);
+  draft.appendChild(dh);
+  var ta = document.createElement("textarea");
+  draft.appendChild(ta);
+  card.appendChild(draft);
+
+  function show(text, src){
+    ta.value = text;
+    srcBadge.className = "src " + src;
+    srcBadge.textContent = src === "live"
+      ? "drafted by Claude — edit before sending"
+      : "template draft — edit before sending";
+  }
+  ta.oninput = function(){
+    if(DATA.drafts[f.key]) DATA.drafts[f.key].text = ta.value;
+  };
+
+  var cached = DATA.drafts[f.key];
+  if(cached && cached.action === f.rec.action){
+    show(cached.text, cached.src);
+  } else {
+    draftMessage(f, function(text, src){
+      DATA.drafts[f.key] = { text:text, src:src, action:f.rec.action };
+      show(text, src);
+    });
+  }
+
+  return card;
+}
+
+function applyRec(f){
+  var r = f.rec;
+  if(r.type === "move"){
+    DATA.edits[f.id] = { day:r.target.day, slot:r.target.slot };
+    selDay = r.target.day;
+  } else if(r.type === "shorten"){
+    DATA.edits[f.id] = { dur: 1 };
+  } else {
+    DATA.edits[f.id] = { cancelled:true };   // cancel, async, delegate
+  }
+  render();
+}
+
+function renderEmployee(){
+  renderPulseBar();
+  var root = document.getElementById("checkins");
+  document.getElementById("empName").textContent = fullName(selPerson);
+  var rows = DATA.checkins[selPerson];
+  var t = document.createElement("table");
+  var thead = document.createElement("thead");
+  var hr = document.createElement("tr");
+  ["Day","Check-in","Energy","Ate","Took a break","How demanding it feels","Confidence in today's must-dos","Source"]
+    .forEach(function(h){ var th=document.createElement("th"); th.textContent=h; hr.appendChild(th); });
+  thead.appendChild(hr); t.appendChild(thead);
+  var tb = document.createElement("tbody");
+  var show = selDay === null ? [0,1,2] : [selDay];
+  show.forEach(function(d){
+    rows[d].forEach(function(r){
+      var tr = document.createElement("tr");
+      [dayLabel(d), r.part, r.energy+"/5", r.ate?"yes":"no", r.broke?"yes":"no", r.demand+"/5", r.confidence+"/5",
+       r.live ? "answered just now" : "synthetic"]
+        .forEach(function(v){ var td=document.createElement("td"); td.textContent=v; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+  });
+  t.appendChild(tb);
+  root.innerHTML = "";
+  root.appendChild(t);
+}
+
+function render(){
+  var p = DATA.people.filter(function(x){ return x.id===selPerson; })[0];
+  document.getElementById("pname").textContent = p.name;
+  document.getElementById("prole").textContent = p.role;
+  var flagged = 0;
+  for(var d=0; d<DAYS; d++){ if(dayStatus(selPerson,d)!=="clear") flagged++; }
+  var sub = document.getElementById("psub");
+  sub.textContent =
+    (flagged ? flagged + " of 10 days need a decision from you." : "Both weeks fit. Nothing needs changing.");
+  var n = changeCount();
+  if(n){
+    sub.appendChild(document.createTextNode("  " + n + " change" + (n>1?"s":"") + " made. "));
+    var undo = el("button","btn btn-quiet","Reset the fortnight");
+    undo.onclick = function(){ DATA.edits = {}; DATA.dismissed = {}; DATA.drafts = {}; render(); };
+    sub.appendChild(undo);
+  }
+
+  renderRoster();
+  if(mode === "mgr"){ renderWeeks(); renderDetail(); }
+  else { renderEmployee(); }
+}
+
+/* ============================================================
+   8b. PULSE CHECK-IN — employee side only
+   Answers write straight into DATA.checkins, which is what
+   capacityAt() reads, so the manager's grid updates immediately.
+   ============================================================ */
+function battery(level){
+  var w = Math.max(2, Math.round(12.5 * level / 4));
+  return '<svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true" focusable="false">' +
+    '<rect x="1" y="1.5" width="17" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+    '<rect x="19" y="5" width="2.5" height="4" rx="1.2" fill="currentColor"/>' +
+    '<rect x="3" y="3.6" width="'+w+'" height="6.8" rx="1.2" fill="currentColor"/></svg>';
+}
+var BOLT = '<svg width="14" height="16" viewBox="0 0 12 16" aria-hidden="true" focusable="false">' +
+  '<path d="M7.4 0 0.8 9.2h4L3.6 16 11.2 5.6H6.6z" fill="currentColor"/></svg>';
+
+function svgSpan(markup, cls){
+  var s = document.createElement("span");
+  s.className = cls;
+  s.innerHTML = markup;
+  return s;
+}
+
+var PULSE_Q = [
+  { key:"energy", label:"How is your energy right now?", cols:5, opts:[
+      { v:1, icon:battery(1), t:"1 \u00B7 Drained",   c:"#9c3a33" },
+      { v:2, icon:battery(2), t:"2 \u00B7 Sluggish",  c:"#b3742a" },
+      { v:3, icon:battery(3), t:"3 \u00B7 Steady",    c:"#5f7f74" },
+      { v:4, icon:battery(4), t:"4 \u00B7 Energized", c:"#2c7d6a" },
+      { v:5, icon:BOLT,       t:"5 \u00B7 Peak",      c:"#0b5d4e" } ] },
+  { key:"ate", label:"Eaten lunch or a meal?", cols:2, pair:true,
+    opts:[ { v:true, t:"Yes", c:"#2c7d6a" }, { v:false, t:"No", c:"#b3742a" } ] },
+  { key:"broke", label:"Break taken?", cols:2, pair:true,
+    opts:[ { v:true, t:"Yes", c:"#2c7d6a" }, { v:false, t:"No", c:"#b3742a" } ] },
+  { key:"demand", label:"How demanding is today feeling?", cols:5, opts:[
+      { v:1, t:"Light",      c:"#2c7d6a" }, { v:2, t:"Manageable", c:"#5f7f74" },
+      { v:3, t:"Busy",       c:"#8a8f5f" }, { v:4, t:"Heavy",      c:"#b3742a" },
+      { v:5, t:"Overloaded", c:"#9c3a33" } ] },
+  { key:"confidence", label:"Confidence in finishing must-do commitments?", cols:5, opts:[
+      { v:1, t:"Very low", c:"#9c3a33" }, { v:2, t:"Low", c:"#b3742a" },
+      { v:3, t:"Medium", c:"#8a8f5f" }, { v:4, t:"High", c:"#2c7d6a" },
+      { v:5, t:"Very high", c:"#0b5d4e" } ] }
+];
+var PARTS = ["Morning","Midday","Afternoon"];
+var pulse = null;
+
+function pulseDay(){ return selDay === null ? 0 : selDay; }
+
+function openPulse(partIdx){
+  var cur = DATA.checkins[selPerson][pulseDay()][partIdx];
+  pulse = { part:partIdx, day:pulseDay(), person:selPerson,
+            energy:cur.energy, ate:cur.ate, broke:cur.broke,
+            demand:cur.demand, confidence:cur.confidence };
+  var title = document.getElementById("pulseTitle");
+  title.textContent = PARTS[partIdx] + " Pulse Ritual";
+  title.appendChild(el("span","modal-tag","15-sec check-in"));
+  document.getElementById("pulseOverlay").hidden = false;
+  renderPulse();
+}
+function closePulse(){ document.getElementById("pulseOverlay").hidden = true; pulse = null; }
+
+function renderPulse(){
+  var body = document.getElementById("pulseBody");
+  body.innerHTML = "";
+  var pairWrap = null;
+
+  PULSE_Q.forEach(function(q){
+    var block = el("div","q");
+    var lab = el("div","q-label");
+    lab.appendChild(el("span",null,q.label));
+    var chosen = q.opts.filter(function(o){ return o.v === pulse[q.key]; })[0];
+    if(chosen && !q.pair){
+      var ans = el("span","ans", chosen.t.replace(/^\d+ \u00B7 /,""));
+      ans.style.color = chosen.c;
+      lab.appendChild(ans);
+    }
+    block.appendChild(lab);
+
+    var opts = el("div","opts c"+q.cols);
+    q.opts.forEach(function(o){
+      var b = el("button","opt");
+      b.style.setProperty("--c", o.c);
+      b.setAttribute("aria-pressed", o.v === pulse[q.key] ? "true" : "false");
+      if(o.icon) b.appendChild(svgSpan(o.icon, "glyph"));
+      b.appendChild(el("span",null,o.t));
+      b.onclick = function(){ pulse[q.key] = o.v; renderPulse(); };
+      opts.appendChild(b);
+    });
+    block.appendChild(opts);
+
+    if(q.pair){
+      if(!pairWrap){ pairWrap = el("div","pair"); body.appendChild(pairWrap); }
+      pairWrap.appendChild(block);
+    } else {
+      pairWrap = null;
+      body.appendChild(block);
+    }
+  });
+}
+
+function savePulse(){
+  if(!pulse) return;
+  var row = DATA.checkins[pulse.person][pulse.day][pulse.part];
+  row.energy = pulse.energy; row.ate = pulse.ate; row.broke = pulse.broke;
+  row.demand = pulse.demand; row.confidence = pulse.confidence;
+  row.live = true;                                  // answered, not generated
+  closePulse();
+  render();
+}
+
+function renderPulseBar(){
+  var bar = document.getElementById("pulseBar");
+  bar.innerHTML = "";
+  var rows = DATA.checkins[selPerson][pulseDay()];
+  bar.appendChild(el("span","org", dayLabel(pulseDay()) + " —"));
+  var next = -1;
+  PARTS.forEach(function(p, i){
+    var done = rows[i].live;
+    if(!done && next === -1) next = i;
+    var s = el("div","pulse-slot" + (done ? " done" : ""));
+    if(done) s.appendChild(el("span","tick","\u2713"));
+    s.appendChild(el("span",null, p + (done ? " answered" : " pending")));
+    bar.appendChild(s);
+  });
+  var btn = el("button","btn-pulse", next === -1 ? "Redo the midday check-in" : "Start the " + PARTS[next].toLowerCase() + " check-in");
+  btn.onclick = function(){ openPulse(next === -1 ? 1 : next); };
+  bar.appendChild(btn);
+}
+
+/* ============================================================
+   9. WIRE UP
+   ============================================================ */
+function setMode(m){
+  mode = m;
+  document.getElementById("tabMgr").setAttribute("aria-pressed", m==="mgr");
+  document.getElementById("tabEmp").setAttribute("aria-pressed", m==="emp");
+  document.getElementById("mgrView").hidden = m!=="mgr";
+  document.getElementById("empView").hidden = m!=="emp";
+  document.getElementById("orgLine").textContent = m==="mgr"
+    ? "Oracle · Platform Engineering · manager view"
+    : "Oracle · Platform Engineering · employee view";
+  document.getElementById("privacyLine").innerHTML = m==="mgr"
+    ? "<strong>What you can see:</strong> a capacity level from 1 to 5, derived from each person's own check-ins. You cannot see the check-in answers behind it, and neither can HR."
+    : "<strong>Private to you:</strong> these check-in answers never leave this screen. Your manager sees only a capacity number from 1 to 5 — not energy, meals, breaks, or confidence.";
+  if(m!=="emp") closePulse();
+  render();
+}
+document.getElementById("tabMgr").onclick = function(){ setMode("mgr"); };
+document.getElementById("tabEmp").onclick = function(){ setMode("emp"); };
+document.getElementById("pulseClose").onclick = closePulse;
+document.getElementById("pulseCancel").onclick = closePulse;
+document.getElementById("pulseSave").onclick = savePulse;
+document.getElementById("pulseOverlay").onclick = function(e){
+  if(e.target === document.getElementById("pulseOverlay")) closePulse();
+};
+document.getElementById("regen").onclick = function(){
+  var s = parseInt(document.getElementById("seed").value, 10) || 1;
+  DATA = genData(s); selDay = null; render();
+};
+
+DATA = genData(4821);
+render();
+</script>
+</body>
+</html>
